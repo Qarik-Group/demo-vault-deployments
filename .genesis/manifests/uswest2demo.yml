@@ -1,0 +1,168 @@
+azs:
+- cloud_properties:
+    availability_zone: us-west-2a
+  name: z1
+- cloud_properties:
+    availability_zone: us-west-2b
+  name: z2
+- cloud_properties:
+    availability_zone: us-west-2c
+  name: z3
+compilation:
+  az: z1
+  network: default
+  reuse_compilation_vms: true
+  vm_type: large
+  workers: 5
+disk_types:
+- cloud_properties:
+    type: gp2
+  disk_size: 3000
+  name: default
+- cloud_properties:
+    type: gp2
+  disk_size: 50000
+  name: large
+exodus:
+  bosh: uswest2demo
+  dated: 2022-02-10 20:21:48 +0000
+  deployer: cweibel
+  domain: vault.bosh
+  features: ""
+  ips:
+  - 10.4.1.6
+  - 10.4.1.7
+  - 10.4.1.8
+  is_director: false
+  kit_is_dev: false
+  kit_name: vault
+  kit_version: 1.6.3
+  use_create_env: false
+  vault_base: /secret/uswest2demo/vault
+  version: 2.8.4
+genesis:
+  ci_mount: /secret/ci/
+  env: uswest2demo
+  exodus_mount: /secret/exodus/
+  exodus_path: uswest2demo/vault
+  min_version: 2.7.0
+  secrets_mount: /secret/
+  secrets_path: uswest2demo/vault
+instance_groups:
+- azs:
+  - z1
+  - z2
+  - z3
+  instances: 3
+  jobs:
+  - name: vault
+    properties:
+      safe:
+        peer:
+          tls:
+            ca: REDACTED
+            certificate: REDACTED
+            key: REDACTED
+        tls:
+          certificate: REDACTED
+          key: REDACTED
+        ui: true
+    release: safe
+  name: vault
+  networks:
+  - name: default
+    static_ips:
+    - 10.4.1.6
+    - 10.4.1.7
+    - 10.4.1.8
+  persistent_disk_type: default
+  stemcell: default
+  vm_type: default
+kit:
+  features: []
+  name: vault
+  version: 1.6.3
+meta:
+  default:
+    azs:
+    - z1
+    - z2
+    - z3
+  domain: vault.bosh
+  vault: /secret/uswest2demo/vault
+name: uswest2demo-vault
+networks:
+- name: default
+  subnets:
+  - azs:
+    - z1
+    cloud_properties:
+      subnet: subnet-0f56fcba8b1ba95b3
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.1.1
+    range: 10.4.1.0/24
+    reserved:
+    - 10.4.1.0-10.4.1.5
+    static:
+    - 10.4.1.6-10.4.1.16
+  - azs:
+    - z2
+    cloud_properties:
+      subnet: subnet-04066d0a30fd1c020
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.2.1
+    range: 10.4.2.0/24
+    reserved:
+    - 10.4.2.0-10.4.2.5
+    static:
+    - 10.4.2.6-10.4.2.16
+  - azs:
+    - z3
+    cloud_properties:
+      subnet: subnet-0f2b10a0d103f3c83
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.3.1
+    range: 10.4.3.0/24
+    reserved:
+    - 10.4.3.0-10.4.3.5
+    static:
+    - 10.4.3.6-10.4.3.16
+  type: manual
+- name: vip
+  type: vip
+params:
+  vault_network: default
+releases:
+- name: safe
+  sha1: af4a9c32b1475953860dec635740dc9e802ece35
+  url: https://github.com/cloudfoundry-community/safe-boshrelease/releases/download/v0.3.1/safe-0.3.1.tgz
+  version: 0.3.1
+stemcells:
+- alias: default
+  os: ubuntu-bionic
+  version: latest
+update:
+  canaries: 1
+  canary_watch_time: 30000-120000
+  max_in_flight: 1
+  serial: true
+  update_watch_time: 30000-120000
+vm_types:
+- cloud_properties:
+    ephemeral_disk:
+      size: 3000
+      type: gp2
+    instance_type: t2.micro
+  name: default
+- cloud_properties:
+    ephemeral_disk:
+      size: 30000
+      type: gp2
+    instance_type: m4.large
+  name: large
