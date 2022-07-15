@@ -2,13 +2,13 @@ pipeline:
   name: vault-deployment-pipeline
   git:
     owner: starkandwayne
-    repo:  deployments
-    branch: master
+    repo:  demo-vault-deployments
+    branch: yang
     private_key: (( vault "concourse/main/github:private_key" ))
 
   vault:
     url:    https://10.4.1.7
-    verify: yes
+    verify: no
     role: (( vault "concourse/genesis/vault:role_id" ))
     secret: (( vault "concourse/genesis/vault:secret_id" ))
   
