@@ -1,0 +1,749 @@
+azs:
+- cloud_properties:
+    availability_zone: us-west-2a
+  name: z1
+- cloud_properties:
+    availability_zone: us-west-2b
+  name: z2
+- cloud_properties:
+    availability_zone: us-west-2c
+  name: z3
+compilation:
+  az: z1
+  network: default
+  reuse_compilation_vms: true
+  vm_type: large
+  workers: 5
+disk_types:
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 2048
+  name: default
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 2048
+  name: consul
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 10240
+  name: concourse
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 4096
+  name: postgres
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 4096
+  name: blobstore
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 1024
+  name: vault
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 65536
+  name: bosh
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 131072
+  name: bosh-large
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 2048
+  name: shield
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 51200
+  name: prometheus
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 4096
+  name: rabbitmq
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 5120
+  name: 5GB
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 10240
+  name: 10GB
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 100240
+  name: 100GB
+- cloud_properties:
+    encrypted: true
+    type: gp3
+  disk_size: 10240
+  name: minio
+exodus:
+  bosh: dev
+  dated: 2022-07-18 13:08:07 +0000
+  deployer: ubuntu
+  domain: vault.bosh
+  features: ""
+  ips:
+  - 10.4.16.6
+  - 10.4.16.7
+  - 10.4.16.8
+  is_director: false
+  kit_is_dev: false
+  kit_name: vault
+  kit_version: 1.6.3
+  use_create_env: false
+  vault_base: /secret/dev/vault
+  version: 2.8.5
+genesis:
+  ci_mount: /secret/ci/
+  env: dev
+  exodus_mount: /secret/exodus/
+  exodus_path: dev/vault
+  min_version: 2.7.0
+  secrets_mount: /secret/
+  secrets_path: dev/vault
+instance_groups:
+- azs:
+  - z1
+  - z2
+  - z3
+  instances: 3
+  jobs:
+  - name: vault
+    properties:
+      safe:
+        peer:
+          tls:
+            ca: REDACTED
+            certificate: REDACTED
+            key: REDACTED
+        tls:
+          certificate: REDACTED
+          key: REDACTED
+        ui: true
+    release: safe
+  name: vault
+  networks:
+  - name: default
+    static_ips:
+    - 10.4.16.6
+    - 10.4.16.7
+    - 10.4.16.8
+  persistent_disk_type: default
+  stemcell: default
+  vm_type: default
+kit:
+  features: []
+  name: vault
+  version: 1.6.3
+meta:
+  default:
+    azs:
+    - z1
+    - z2
+    - z3
+  domain: vault.bosh
+  vault: /secret/dev/vault
+name: dev-vault
+networks:
+- name: default
+  subnets:
+  - azs:
+    - z1
+    cloud_properties:
+      subnet: subnet-0ea631cc3ad19e04f
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.16.1
+    range: 10.4.16.0/24
+    reserved:
+    - 10.4.16.0-10.4.16.5
+    - 10.4.16.245-10.4.16.254
+    static:
+    - 10.4.16.6-10.4.16.16
+  - azs:
+    - z2
+    cloud_properties:
+      subnet: subnet-09a05edb82702379b
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.17.1
+    range: 10.4.17.0/24
+    reserved:
+    - 10.4.17.0-10.4.17.5
+    static:
+    - 10.4.17.6-10.4.17.16
+  - azs:
+    - z3
+    cloud_properties:
+      subnet: subnet-0dd034854c197dc41
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.18.1
+    range: 10.4.18.0/24
+    reserved:
+    - 10.4.18.0-10.4.18.5
+    static:
+    - 10.4.18.6-10.4.18.16
+  type: manual
+- name: compilation
+  subnets:
+  - azs:
+    - z1
+    cloud_properties:
+      subnet: subnet-0ea631cc3ad19e04f
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.16.1
+    range: 10.4.16.0/24
+    reserved:
+    - 10.4.16.0-10.4.16.244
+  type: manual
+- name: cf-db
+  subnets:
+  - azs:
+    - z1
+    cloud_properties:
+      subnet: subnet-03720ac266d128f29
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.29.1
+    range: 10.4.29.0/28
+    reserved:
+    - 10.4.29.0-10.4.29.3
+    static:
+    - 10.4.29.4-10.4.29.14
+  - azs:
+    - z2
+    cloud_properties:
+      subnet: subnet-015b5284fb46c07e6
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.29.17
+    range: 10.4.29.16/28
+    reserved:
+    - 10.4.29.16-10.4.29.19
+    static:
+    - 10.4.29.20-10.4.29.30
+  - azs:
+    - z3
+    cloud_properties:
+      subnet: subnet-05dcf16f08f546160
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.29.33
+    range: 10.4.29.32/28
+    reserved:
+    - 10.4.29.32-10.4.29.35
+    static:
+    - 10.4.29.36-10.4.29.46
+  type: manual
+- name: cf-edge
+  subnets:
+  - azs:
+    - z1
+    cloud_properties:
+      subnet: subnet-0bdaf27eb328f7e4d
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.62.1
+    range: 10.4.62.0/25
+    reserved:
+    - 10.4.62.0-10.4.62.3
+    static:
+    - 10.4.62.4-10.4.62.16
+  - azs:
+    - z2
+    cloud_properties:
+      subnet: subnet-048560ab22b7c345f
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.62.129
+    range: 10.4.62.128/25
+    reserved:
+    - 10.4.62.128-10.4.62.131
+    static:
+    - 10.4.62.132-10.4.17.144
+  type: manual
+- name: cf-core
+  subnets:
+  - azs:
+    - z1
+    cloud_properties:
+      subnet: subnet-0a00811172726ce3b
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.20.1
+    range: 10.4.20.0/24
+    reserved:
+    - 10.4.20.0-10.4.20.5
+    static:
+    - 10.4.20.6-10.4.20.16
+  - azs:
+    - z2
+    cloud_properties:
+      subnet: subnet-03e4614c67b6af3d5
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.21.1
+    range: 10.4.21.0/24
+    reserved:
+    - 10.4.21.0-10.4.21.5
+    static:
+    - 10.4.21.6-10.4.21.16
+  - azs:
+    - z3
+    cloud_properties:
+      subnet: subnet-04ecdc31ba8c3d685
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.22.1
+    range: 10.4.22.0/24
+    reserved:
+    - 10.4.22.0-10.4.22.5
+    static:
+    - 10.4.22.6-10.4.22.16
+  type: manual
+- name: cf-runtime
+  subnets:
+  - azs:
+    - z1
+    cloud_properties:
+      subnet: subnet-08f6940f71c779a15
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.23.1
+    range: 10.4.23.0/24
+    reserved:
+    - 10.4.23.0-10.4.23.5
+    static:
+    - 10.4.23.6-10.4.23.16
+  - azs:
+    - z2
+    cloud_properties:
+      subnet: subnet-0964231d662ce7e9b
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.24.1
+    range: 10.4.24.0/24
+    reserved:
+    - 10.4.24.0-10.4.24.5
+    static:
+    - 10.4.24.6-10.4.24.16
+  - azs:
+    - z3
+    cloud_properties:
+      subnet: subnet-0e513e543403b53ac
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.25.1
+    range: 10.4.25.0/24
+    reserved:
+    - 10.4.25.0-10.4.25.5
+    static:
+    - 10.4.25.6-10.4.25.16
+  type: manual
+- name: blacksmith
+  subnets:
+  - azs:
+    - z1
+    cloud_properties:
+      subnet: subnet-062565d28649eeb00
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.26.1
+    range: 10.4.26.0/24
+    reserved:
+    - 10.4.26.0-10.4.26.5
+    - 10.4.26.245-10.4.26.254
+    static:
+    - 10.4.26.6-10.4.26.16
+  - azs:
+    - z2
+    cloud_properties:
+      subnet: subnet-0d10710c119782f5f
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.27.1
+    range: 10.4.27.0/24
+    reserved:
+    - 10.4.27.0-10.4.27.5
+    static:
+    - 10.4.27.6-10.4.27.16
+  - azs:
+    - z3
+    cloud_properties:
+      subnet: subnet-06fb1168c8fba4e45
+    dns:
+    - 1.1.1.1
+    - 8.8.4.4
+    gateway: 10.4.28.1
+    range: 10.4.28.0/24
+    reserved:
+    - 10.4.28.0-10.4.28.5
+    static:
+    - 10.4.28.6-10.4.28.16
+  type: manual
+params:
+  auxiliary_vault: true
+  vault_network: default
+releases:
+- name: safe
+  sha1: af4a9c32b1475953860dec635740dc9e802ece35
+  url: https://github.com/cloudfoundry-community/safe-boshrelease/releases/download/v0.3.1/safe-0.3.1.tgz
+  version: 0.3.1
+stemcells:
+- alias: default
+  os: ubuntu-bionic
+  version: latest
+update:
+  canaries: 1
+  canary_watch_time: 30000-120000
+  max_in_flight: 1
+  serial: true
+  update_watch_time: 30000-120000
+vm_extensions:
+- cloud_properties:
+    ephemeral_disk:
+      size: 102400
+      type: gp3
+  name: 100GB_ephemeral_disk
+- cloud_properties:
+    ephemeral_disk:
+      size: 51200
+      type: gp3
+  name: 50GB_ephemeral_disk
+- cloud_properties:
+    elbs:
+    - snw-dev-cf-elb
+  name: cf-router-network-properties
+- cloud_properties:
+    elbs:
+    - dev-cf-tcp-lb
+  name: cf-tcp-router-network-properties
+- name: diego-ssh-proxy-network-properties
+vm_types:
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 32768
+      type: gp3
+    instance_type: t3.medium
+  name: api
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 16384
+      type: gp3
+    instance_type: t3.small
+  name: as-api
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 16384
+      type: gp3
+    instance_type: t3.small
+  name: as-broker
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 16384
+      type: gp3
+    instance_type: t3.small
+  name: as-collector
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 16384
+      type: gp3
+    instance_type: t3.small
+  name: as-engine
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 16384
+      type: gp3
+    instance_type: t3.small
+  name: as-operator
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 16384
+      type: gp3
+    instance_type: t3.small
+  name: as-scaler
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 16384
+      type: gp3
+    instance_type: t3.small
+  name: as-scheduler
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 8192
+      type: gp3
+    instance_type: t3.small
+  name: bbs
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 16384
+      type: gp3
+    instance_type: t3.medium
+  name: blobstore
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 24576
+      type: gp3
+    instance_type: t3.medium
+  name: bosh
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 8192
+      type: gp3
+    instance_type: t3.medium
+  name: cc-worker
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 65536
+      type: gp3
+    instance_type: t3.medium
+  name: compilation
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 65536
+      type: gp3
+    instance_type: t3.medium
+  name: concourse-worker
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 16384
+      type: gp3
+    instance_type: t3.medium
+  name: credhub
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 8192
+      type: gp3
+    instance_type: t3.medium
+  name: default
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 262144
+      type: gp3
+    instance_type: t3.medium
+  name: diego-cell
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 32768
+      type: gp3
+    instance_type: t3.medium
+  name: diego-api
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 32768
+      type: gp3
+    instance_type: t3.medium
+  name: doppler
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 8192
+      type: gp3
+    instance_type: t3.medium
+  name: errand
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 8192
+      type: gp3
+    instance_type: t3.medium
+  name: haproxy
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 32768
+      type: gp3
+    instance_type: t3.medium
+  name: large
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 16384
+      type: gp3
+    instance_type: t3.medium
+  name: log-api
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 16384
+      type: gp3
+    instance_type: t3.small
+  name: medium
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 10240
+      type: gp3
+    instance_type: t3.medium
+  name: minimal
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 8192
+      type: gp3
+    instance_type: t3.medium
+  name: nats
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 32768
+      type: gp3
+    instance_type: t3.medium
+  name: postgres
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 8192
+      type: gp3
+    instance_type: t3.medium
+  name: router
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 8192
+      type: gp3
+    instance_type: t3.medium
+  name: scheduler
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 8192
+      type: gp3
+    instance_type: t3.small
+  name: small
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 10240
+      type: gp3
+    instance_type: t3.small
+  name: small-cf
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 24576
+      type: gp3
+    instance_type: t3.medium
+  name: small-highmem
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 8192
+      type: gp3
+    instance_type: t3.medium
+  name: syslogger
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 8192
+      type: gp3
+    instance_type: t3.small
+  name: tcp-router
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 81920
+      type: gp3
+    instance_type: t3.medium
+  name: thunder-dome
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 16384
+      type: gp3
+    instance_type: t3.medium
+  name: uaa
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 10240
+      type: gp3
+    instance_type: t3.medium
+  name: blacksmith
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 10240
+      type: gp3
+    instance_type: t3.small
+  name: blacksmith-redis-small
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 10240
+      type: gp3
+    instance_type: t3.medium
+  name: blacksmith-redis-medium
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 10240
+      type: gp3
+    instance_type: t3.large
+  name: blacksmith-redis-large
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 10240
+      type: gp3
+    instance_type: t3.small
+  name: blacksmith-rabbitmq-medium
+- cloud_properties:
+    ephemeral_disk:
+      encrypted: true
+      size: 10240
+      type: gp3
+    instance_type: t3.medium
+  name: blacksmith-rabbitmq-large
