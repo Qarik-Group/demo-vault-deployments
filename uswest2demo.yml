@@ -5,7 +5,7 @@ kit:
 
 genesis:
   env:            uswest2demo
-  min_version:    2.8.5
+  min_version:    2.8.4
 
 params: 
   auxiliary_vault: true
