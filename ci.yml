@@ -1,5 +1,6 @@
 pipeline:
   name: vault-deployment-pipeline
+
   git:
     owner: starkandwayne
     repo:  demo-vault-deployments
@@ -38,3 +39,85 @@ pipeline:
     default:
     - dev
     - uswest2demo
+
+
+jobs:
+# Try to trigger the job multiple times and see what happens
+- name: simple-job1
+  plan:
+  - task: simple-task
+    config:
+      platform: linux
+      image_resource:
+        source:
+          repository: starkandwayne/concourse
+          tag: latest
+        type: registry-image
+      run:
+        path: echo
+        args: ["Hello, world!"]
+        
+- name: genesis-cmd-job3
+  plan:
+  - do:
+    - in_parallel:
+      - get: dev-cloud-config
+        trigger: true
+      - get: dev-runtime-config
+        trigger: true
+      - get: dev-changes
+        trigger: true
+  - task: simple-task
+    config:
+      image_resource:
+        source:
+          repository: starkandwayne/concourse
+          tag: latest
+        type: registry-image
+      inputs:
+      - name: dev-changes
+      outputs:
+      - name: out
+      params:
+        BOSH_CA_CERT: (( vault "secret/dev/bosh/ssl/ca:certificate" ))
+        BOSH_CLIENT: admin
+        BOSH_CLIENT_SECRET: (( vault "secret/dev/bosh/users/admin:password" ))
+        BOSH_ENVIRONMENT: https://10.4.16.4:25555
+        BOSH_NON_INTERACTIVE: true
+        CACHE_DIR: dev-cache
+        CI_NO_REDACT: 0
+        CURRENT_ENV: dev
+        GENESIS_HONOR_ENV: 1
+        GIT_BRANCH: yang
+        GIT_PRIVATE_KEY: (( vault "concourse/demo/vault/github:private_key" ))
+        OUT_DIR: out/git
+        PREVIOUS_ENV: null
+        VAULT_ADDR: https://10.4.1.7
+        VAULT_ROLE_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
+        VAULT_SECRET_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
+        VAULT_SKIP_VERIFY: true
+        WORKING_DIR: dev-changes
+      platform: linux
+      run:
+        path: bash
+        args:
+        - "-ec"
+        - | 
+         echo "Creating Vault target";
+         safe target ${VAULT_ADDR} deployments-vault --no-strongbox -k
+         echo "Logging into Vault";
+         printf "${VAULT_ROLE_ID}\n${VAULT_SECRET_ID}\n" | 
+         safe auth approle;
+
+         echo "Getting dev info using genesis command";
+         dev-changes/.genesis/bin/genesis info dev -C dev-changes
+         echo "Now you can run most Genesis command"
+         dev-changes/.genesis/bin/genesis do dev -- init -C dev-changes
+
+
+groups:
+- name: opsjob
+  jobs:
+    - simple-job1
+    - genesis-cmd-job3
+
