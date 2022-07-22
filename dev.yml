@@ -10,3 +10,4 @@ genesis:
 params:
   auxiliary_vault: true
   vault_network: default
+  stemcell_os: ubuntu-bionic
