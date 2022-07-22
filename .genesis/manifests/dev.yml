@@ -92,8 +92,8 @@ disk_types:
   name: minio
 exodus:
   bosh: dev
-  dated: 2022-07-18 13:08:07 +0000
-  deployer: ubuntu
+  dated: 2022-07-22 09:56:18 +0000
+  deployer: unknown
   domain: vault.bosh
   features: ""
   ips:
@@ -106,13 +106,13 @@ exodus:
   kit_version: 1.6.3
   use_create_env: false
   vault_base: /secret/dev/vault
-  version: 2.8.5
+  version: 2.8.4
 genesis:
   ci_mount: /secret/ci/
   env: dev
   exodus_mount: /secret/exodus/
   exodus_path: dev/vault
-  min_version: 2.7.0
+  min_version: 2.8.4
   secrets_mount: /secret/
   secrets_path: dev/vault
 instance_groups:
