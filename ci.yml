@@ -103,23 +103,32 @@ jobs:
         args:
         - "-ec"
         - | 
-         echo "Creating Vault target";
+         echo "Creating Vault target using safe";
          safe target ${VAULT_ADDR} deployments-vault --no-strongbox -k
          echo "Logging into Vault";
          printf "${VAULT_ROLE_ID}\n${VAULT_SECRET_ID}\n" | 
          safe auth approle;
 
-         echo "Getting dev info using genesis command";
-         dev-changes/.genesis/bin/genesis info dev -C dev-changes
-         echo "Now you can run most Genesis command"
-         echo "Before init"
-         dev-changes/.genesis/bin/genesis do dev -- init -C dev-changes
-         echo "After init"
-         safe targets
-         safe env --bash
-         echo "Complete init"
+         echo "Getting ${CURRENT_ENV} vault info";
+         dev-changes/.genesis/bin/genesis info ${CURRENT_ENV} -C dev-changes
 
-- name: genesis-vault-unseal1
+         echo "Init  ${CURRENT_ENV} Vault"
+         dev-changes/.genesis/bin/genesis do ${CURRENT_ENV} -- init -C dev-changes
+         safe targets
+         
+         echo "Export ${CURRENT_ENV} target configuration into envvar"
+         eval $(safe env --bash)
+
+         echo "Export ${CURRENT_ENV} vault seal keys"
+         SEAL_KEY_PATH='secret/vault/seal/keys'
+         EXPORTED_SEAL_KEYS=$(safe -T ${CURRENT_ENV} -k export  ${SEAL_KEY_PATH})
+         MASTER_VAULT_SEAL_KEY_STORING_PATH="secret/${CURRENT_ENV}/vault/seal/keys"
+
+         echo "${EXPORTED_SEAL_KEYS/"$SEAL_KEY_PATH"/"$MASTER_VAULT_SEAL_KEY_STORING_PATH"}"   | safe -T deployments-vault -k  import
+         safe -T deployments-vault set secret/${CURRENT_ENV}/vault VAULT_ADDR=${VAULT_ADDR}
+         safe -T deployments-vault set secret/${CURRENT_ENV}/vault VAULT_TOKEN=${VAULT_TOKEN}
+
+- name: genesis-vault-unseal
   plan:
   - do:
     - in_parallel:
@@ -187,7 +196,7 @@ groups:
 - name: opsjob
   jobs:
     - simple-job1
-    - genesis-vault-init
+    - genesis-vault-init1
     - genesis-vault-unseal
 
 
