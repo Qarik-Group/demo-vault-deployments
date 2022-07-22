@@ -1,7 +1,7 @@
 ---
 kit:
   name:    vault
-  version: 1.6.2
+  version: 1.6.3
 
 genesis:
   env:            dev
