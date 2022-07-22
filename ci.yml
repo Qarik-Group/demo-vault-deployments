@@ -1,6 +1,3 @@
-master_vault_url: https://10.4.1.7
-
-
 pipeline:
   name: vault-deployment-pipeline
 
@@ -11,7 +8,7 @@ pipeline:
     private_key: (( vault "concourse/demo/vault/github:private_key" ))
 
   vault:
-    url:    ((master_vault_url))
+    url:    https://10.4.1.7
     verify: no
     role: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
     secret: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
@@ -95,7 +92,7 @@ jobs:
         GIT_PRIVATE_KEY: (( vault "concourse/demo/vault/github:private_key" ))
         OUT_DIR: out/git
         PREVIOUS_ENV: null
-        VAULT_ADDR: ((master_vault_url))
+        VAULT_ADDR: https://10.4.1.7
         VAULT_ROLE_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
         VAULT_SECRET_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
         VAULT_SKIP_VERIFY: true
@@ -152,7 +149,7 @@ jobs:
         GIT_PRIVATE_KEY: (( vault "concourse/demo/vault/github:private_key" ))
         OUT_DIR: out/git
         PREVIOUS_ENV: null
-        VAULT_ADDR: ((master_vault_url))
+        VAULT_ADDR: https://10.4.1.7
         VAULT_ROLE_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
         VAULT_SECRET_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
         VAULT_SKIP_VERIFY: true
@@ -187,4 +184,5 @@ groups:
     - simple-job1
     - genesis-vault-init
     - genesis-vault-unseal
+
 
