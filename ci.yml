@@ -113,6 +113,9 @@ jobs:
          dev-changes/.genesis/bin/genesis info dev -C dev-changes
          echo "Now you can run most Genesis command"
          dev-changes/.genesis/bin/genesis do dev -- init -C dev-changes
+         echo "After init"
+         safe targets
+         safe env --bash
 
 - name: genesis-vault-unseal
   plan:
