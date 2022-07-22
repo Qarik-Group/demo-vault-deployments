@@ -92,7 +92,7 @@ disk_types:
   name: minio
 exodus:
   bosh: dev
-  dated: 2022-07-22 10:52:22 +0000
+  dated: 2022-07-22 11:29:01 +0000
   deployer: unknown
   domain: vault.bosh
   features: ""
