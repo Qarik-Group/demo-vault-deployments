@@ -169,8 +169,13 @@ jobs:
          echo "Getting dev info using genesis command";
          dev-changes/.genesis/bin/genesis info dev -C dev-changes
          echo "Now you can run most Genesis command"
-         safe targets
-         #  dev-changes/.genesis/bin/genesis do dev-vault -C dev-changes -- unseal 
+
+         echo "Getting deployed Vault address"
+         DEV_VAULT_ADDRESS=$( dev-changes/.genesis/bin/genesis info dev -C dev-changes | grep -A 3 'vault nodes:' | tail -1)
+         echo "Targeting deployed Vault"
+         safe target ${DEV_VAULT_ADDRESS} dev
+         echo "Genesis unseal vault"
+         dev-changes/.genesis/bin/genesis do dev -C dev-changes -- unseal 
 
 groups:
 - name: opsjob
