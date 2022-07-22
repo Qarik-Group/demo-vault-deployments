@@ -1,3 +1,5 @@
+master_vault_url: https://10.4.1.7
+---
 pipeline:
   name: vault-deployment-pipeline
 
@@ -8,7 +10,7 @@ pipeline:
     private_key: (( vault "concourse/demo/vault/github:private_key" ))
 
   vault:
-    url:    https://10.4.1.7
+    url:    ((master_vault_url))
     verify: no
     role: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
     secret: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
@@ -92,7 +94,7 @@ jobs:
         GIT_PRIVATE_KEY: (( vault "concourse/demo/vault/github:private_key" ))
         OUT_DIR: out/git
         PREVIOUS_ENV: null
-        VAULT_ADDR: https://10.4.1.7
+        VAULT_ADDR: ((master_vault_url))
         VAULT_ROLE_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
         VAULT_SECRET_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
         VAULT_SKIP_VERIFY: true
@@ -149,7 +151,7 @@ jobs:
         GIT_PRIVATE_KEY: (( vault "concourse/demo/vault/github:private_key" ))
         OUT_DIR: out/git
         PREVIOUS_ENV: null
-        VAULT_ADDR: https://10.4.1.7
+        VAULT_ADDR: ((master_vault_url))
         VAULT_ROLE_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
         VAULT_SECRET_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
         VAULT_SKIP_VERIFY: true
@@ -175,7 +177,8 @@ jobs:
          echo "Targeting deployed Vault"
          safe target ${DEV_VAULT_ADDRESS} dev
          echo "Genesis unseal vault using target dev"
-         dev-changes/.genesis/bin/genesis do dev -C dev-changes -- unseal 
+         safe ls
+        #  dev-changes/.genesis/bin/genesis do dev -C dev-changes -- unseal
 
 groups:
 - name: opsjob
