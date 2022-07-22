@@ -112,10 +112,12 @@ jobs:
          echo "Getting dev info using genesis command";
          dev-changes/.genesis/bin/genesis info dev -C dev-changes
          echo "Now you can run most Genesis command"
+         echo "Before init"
          dev-changes/.genesis/bin/genesis do dev -- init -C dev-changes
          echo "After init"
          safe targets
          safe env --bash
+         echo "Complete init"
 
 - name: genesis-vault-unseal
   plan:
