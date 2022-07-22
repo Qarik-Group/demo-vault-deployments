@@ -57,7 +57,7 @@ jobs:
         path: echo
         args: ["Hello, world!"]
         
-- name: genesis-vault-init
+- name: genesis-vault-init1
   plan:
   - do:
     - in_parallel:
@@ -119,7 +119,7 @@ jobs:
          safe env --bash
          echo "Complete init"
 
-- name: genesis-vault-unseal
+- name: genesis-vault-unseal1
   plan:
   - do:
     - in_parallel:
