@@ -92,7 +92,7 @@ disk_types:
   name: minio
 exodus:
   bosh: dev
-  dated: 2022-07-22 09:56:18 +0000
+  dated: 2022-07-22 10:52:22 +0000
   deployer: unknown
   domain: vault.bosh
   features: ""
@@ -416,6 +416,7 @@ networks:
   type: manual
 params:
   auxiliary_vault: true
+  stemcell_os: ubuntu-bionic
   vault_network: default
 releases:
 - name: safe
