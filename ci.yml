@@ -174,7 +174,7 @@ jobs:
          DEV_VAULT_ADDRESS=$( dev-changes/.genesis/bin/genesis info dev -C dev-changes | grep -A 3 'vault nodes:' | tail -1)
          echo "Targeting deployed Vault"
          safe target ${DEV_VAULT_ADDRESS} dev
-         echo "Genesis unseal vault"
+         echo "Genesis unseal vault using target dev"
          dev-changes/.genesis/bin/genesis do dev -C dev-changes -- unseal 
 
 groups:
