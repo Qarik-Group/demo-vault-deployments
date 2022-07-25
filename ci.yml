@@ -115,7 +115,7 @@ jobs:
          echo "Init  ${CURRENT_ENV} Vault"
          dev-changes/.genesis/bin/genesis do ${CURRENT_ENV} -- init -C dev-changes
          safe targets
-         
+
          echo "Export ${CURRENT_ENV} target configuration into envvar"
          eval $(safe env --bash)
 
@@ -184,12 +184,15 @@ jobs:
          dev-changes/.genesis/bin/genesis info dev -C dev-changes
          echo "Now you can run most Genesis command"
 
-         echo "Getting deployed Vault address"
-         DEV_VAULT_ADDRESS=$( dev-changes/.genesis/bin/genesis info dev -C dev-changes | grep -A 3 'vault nodes:' | tail -1)
+         echo "Getting ${CURRENT_ENV} Vault target configuration"
+         DEV_VAULT_ADDRESS=$( safe -k get secret/${CURRENT_ENV}/vault:VAULT_ADDR )
+         DEV_VAULT_TOKEN=$( safe -k get secret/${CURRENT_ENV}/vault:VAULT_TOKEN )
          echo "Targeting deployed Vault"
-         safe target ${DEV_VAULT_ADDRESS} dev
-         echo "Genesis unseal vault using target dev"
-         safe ls
+         safe target ${DEV_VAULT_ADDRESS} ${CURRENT_ENV}
+         echo Logging into ${CURRENT_ENV} Vault";
+         echo "${DEV_VAULT_TOKEN}" | safe -T ${CURRENT_ENV} auth token
+         safe -T ${CURRENT_ENV} tree
+        #  echo "Genesis unseal vault using target ${CURRENT_ENV}"
         #  dev-changes/.genesis/bin/genesis do dev -C dev-changes -- unseal
 
 groups:
