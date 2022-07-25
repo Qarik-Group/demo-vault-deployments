@@ -189,9 +189,9 @@ jobs:
          DEV_VAULT_TOKEN=$( safe -k get secret/${CURRENT_ENV}/vault:VAULT_TOKEN )
          echo "Targeting deployed Vault"
          safe target ${DEV_VAULT_ADDRESS} ${CURRENT_ENV}
-         echo Logging into ${CURRENT_ENV} Vault";
+         echo "Logging into ${CURRENT_ENV} Vault";
          echo "${DEV_VAULT_TOKEN}" | safe -T ${CURRENT_ENV} auth token
-         safe -T ${CURRENT_ENV} tree
+         safe -T ${CURRENT_ENV} -k tree
         #  echo "Genesis unseal vault using target ${CURRENT_ENV}"
         #  dev-changes/.genesis/bin/genesis do dev -C dev-changes -- unseal
 
