@@ -248,7 +248,7 @@ jobs:
          echo ""
          echo "Creating ${MAIN_VAULT_NAME} Vault target - This is the vault target where secret will be backed up to";
          safe target ${VAULT_ADDR} ${MAIN_VAULT_NAME} --no-strongbox -k
-         echo "Logging into Vault";
+         echo "Logging into ${MAIN_VAULT_NAME} Vault";
          printf "${VAULT_ROLE_ID}\n${VAULT_SECRET_ID}\n" | 
          safe auth approle;
 
@@ -257,7 +257,7 @@ jobs:
          DEV_VAULT_ADDRESS=$( safe -k get secret/${CURRENT_ENV}/vault:VAULT_ADDR )
          DEV_VAULT_TOKEN=$( safe -k get secret/${CURRENT_ENV}/vault:VAULT_TOKEN )
 
-         echo "==========${CURRENT_ENV}=========================================================" 
+         echo "==========${CURRENT_ENV}===========================================================" 
          echo "Creating ${CURRENT_ENV} Vault target - This is the vault target where secret will be backed up from";
          safe target ${DEV_VAULT_ADDRESS} ${CURRENT_ENV}
 
