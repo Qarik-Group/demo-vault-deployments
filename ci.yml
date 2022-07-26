@@ -264,6 +264,9 @@ jobs:
          echo "Logging into ${CURRENT_ENV} Vault";
          echo "${DEV_VAULT_TOKEN}" | safe -T ${CURRENT_ENV} -k auth token
          
+         echo "Export secret/br from ${MAIN_VAULT_NAME} Vault to ${CURRENT_ENV} Vault";
+         echo "Please note that secret need exist on both vault to make it work."
+         echo "For example if export target Vault doesn't have a `concourse` path, this command will not work."
          safe -T  ${MAIN_VAULT_NAME} export secret/br | safe -T ${CURRENT_ENV} -k import
 groups:
 - name: opsjob
