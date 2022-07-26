@@ -244,9 +244,9 @@ jobs:
         - "-ec"
         - |
          echo "========${MAIN_VAULT_NAME}===========================================================" 
-         echo "This script will export data under secret/br from ${MAIN_VAULT_NAME}@${VAULT_ADDR} to ${CURRENT_ENV}@${DEV_VAULT_ADDRESS}"
+         echo "This script will export data under secret/br from ${MAIN_VAULT_NAME}@${VAULT_ADDR} to ${CURRENT_ENV}"
          echo ""
-         echo "Creating ${MAIN_VAULT_NAME} Vault target - This is the vault target where secret will be backed up to";
+         echo "Creating ${MAIN_VAULT_NAME} Vault target - This is the vault target where secret will be backed up from";
          safe target ${VAULT_ADDR} ${MAIN_VAULT_NAME} --no-strongbox -k
          echo "Logging into ${MAIN_VAULT_NAME} Vault";
          printf "${VAULT_ROLE_ID}\n${VAULT_SECRET_ID}\n" | 
@@ -258,7 +258,7 @@ jobs:
          DEV_VAULT_TOKEN=$( safe -k get secret/${CURRENT_ENV}/vault:VAULT_TOKEN )
 
          echo "==========${CURRENT_ENV}===========================================================" 
-         echo "Creating ${CURRENT_ENV} Vault target - This is the vault target where secret will be backed up from";
+         echo "Creating ${CURRENT_ENV} Vault target - This is the vault target where secret will be backed up to";
          safe target ${DEV_VAULT_ADDRESS} ${CURRENT_ENV}
 
          echo "Logging into ${CURRENT_ENV} Vault";
