@@ -244,7 +244,7 @@ jobs:
         - "-ec"
         - |
          echo "========${MAIN_VAULT_NAME}===========================================================" 
-         echo "This script will export data under concourse from ${MAIN_VAULT_NAME}@${VAULT_ADDR} to ${CURRENT_ENV}@${DEV_VAULT_ADDRESS}"
+         echo "This script will export data under secret/br from ${MAIN_VAULT_NAME}@${VAULT_ADDR} to ${CURRENT_ENV}@${DEV_VAULT_ADDRESS}"
          echo ""
          echo "Creating ${MAIN_VAULT_NAME} Vault target - This is the vault target where secret will be backed up to";
          safe target ${VAULT_ADDR} ${MAIN_VAULT_NAME} --no-strongbox -k
@@ -264,7 +264,7 @@ jobs:
          echo "Logging into ${CURRENT_ENV} Vault";
          echo "${DEV_VAULT_TOKEN}" | safe -T ${CURRENT_ENV} -k auth token
          
-         safe -T  ${MAIN_VAULT_NAME} export concourse | safe -T ${CURRENT_ENV} -k import
+         safe -T  ${MAIN_VAULT_NAME} export secret/br | safe -T ${CURRENT_ENV} -k import
 groups:
 - name: opsjob
   jobs:
