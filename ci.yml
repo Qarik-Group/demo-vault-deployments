@@ -264,7 +264,7 @@ jobs:
          echo "Logging into ${CURRENT_ENV} Vault";
          echo "${DEV_VAULT_TOKEN}" | safe -T ${CURRENT_ENV} -k auth token
          
-         safe -T  ${MAIN_VAULT_NAME} export concourse | safe -T ${CURRENT_ENV} -k import concourse
+         safe -T  ${MAIN_VAULT_NAME} export concourse | safe -T ${CURRENT_ENV} -k import
 groups:
 - name: opsjob
   jobs:
