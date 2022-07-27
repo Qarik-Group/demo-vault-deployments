@@ -36,7 +36,7 @@ pipeline:
       auto *dev
       dev -> uswest2demo
   groups:
-    default:
+    vault-deployment-pipeline:
     - dev
     - uswest2demo
 
@@ -194,6 +194,7 @@ jobs:
          echo "${DEV_VAULT_TOKEN}" | safe -T ${CURRENT_ENV} auth token
          safe -T ${CURRENT_ENV} -k tree
         #  echo "Genesis unseal vault using target ${CURRENT_ENV}"
+        # the seal keys are in deployments-vault as secret/${CURRENT_ENV}/vault/seal/keys
         #  dev-changes/.genesis/bin/genesis do dev -C dev-changes -- unseal
 
 - name: genesis-vault-backup
@@ -277,3 +278,60 @@ groups:
     - genesis-vault-backup
 
 
+jobs:
+- name: trigger-job-in-dr
+  public: true
+  serial: true
+  plan:
+  - do:
+    - in_parallel:
+      - get: dev-changes
+        passed:
+        - dev-vault
+        trigger: true
+  - task: simple-job
+    config:
+      image_resource:
+        source:
+          repository: starkandwayne/concourse
+          tag: latest
+        type: registry-image
+      inputs:
+      - name: dev-changes
+      outputs:
+      - name: out
+      params:
+        VAULT_ADDR: https://10.4.1.7
+        VAULT_ROLE_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
+        VAULT_SECRET_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
+        VAULT_SKIP_VERIFY: true
+        WORKING_DIR: dev-changes
+      platform: linux
+      run:
+        path: bash
+        args:
+        - "-ec"
+        - | 
+         echo "Creating Vault target using safe";
+         safe target ${VAULT_ADDR} deployments-vault --no-strongbox -k
+         echo "Logging into Vault";
+         printf "${VAULT_ROLE_ID}\n${VAULT_SECRET_ID}\n" | 
+         safe auth approle;
+         CONCOURSEDR_URL=$(safe get secret/dr/dev/concourse:url)
+         CONCOURSEDR_UN=$(safe get secret/dr/dev/concourse:username)
+         CONCOURSEDR_PW=$(safe get secret/dr/dev/concourse:password)
+
+         curl https://github.com/concourse/concourse/releases/download/v7.7.1/fly-7.7.1-linux-amd64.tgz -L --output fly-7.7.1-linux-amd64.tgz 
+         tar zxvf fly-7.7.1-linux-amd64.tgz 
+         echo 'login...............'
+         ./fly --target codexdr login -k --team-name main --concourse-url ${CONCOURSEDR_URL} -u ${CONCOURSEDR_UN} -p ${CONCOURSEDR_PW}
+         ./fly targets
+         echo 'trigger-job'
+         echo 'trigger-job'
+         ./fly --target codexdr trigger-job -j='test_pipeline/job-hello-world'
+
+groups:
+- name: vault-deployment-pipeline
+  jobs:
+  - ((append))
+  - trigger-job-in-dr
