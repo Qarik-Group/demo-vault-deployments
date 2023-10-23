@@ -1,0 +1,337 @@
+pipeline:
+  name: vault-deployment-pipeline
+
+  git:
+    owner: starkandwayne
+    repo:  demo-vault-deployments
+    branch: yang
+    private_key: (( vault "concourse/demo/vault/github:private_key" ))
+
+  vault:
+    url:    https://10.4.1.7
+    verify: no
+    role: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
+    secret: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
+  
+  slack: 
+    channel: '#botspam'
+    webhook: (( vault "concourse/genesis/slack:webhook" ))
+
+  boshes:
+    dev:
+      alias:    dev
+      url:      https://10.4.16.4:25555
+      ca_cert:  (( vault "secret/dev/bosh/ssl/ca:certificate" ))
+      username: admin
+      password: (( vault "secret/dev/bosh/users/admin:password" ))
+    uswest2demo:
+      alias:    uswest2demo
+      url:      https://10.4.1.4:25555
+      ca_cert:  (( vault "secret/uswest2demo/bosh/ssl/ca:certificate" ))
+      username: admin
+      password: (( vault "secret/uswest2demo/bosh/users/admin:password" ))
+    
+  layouts:
+    default: |+
+      auto *dev
+      dev -> uswest2demo
+  groups:
+    vault-deployment-pipeline:
+    - dev
+    - uswest2demo
+
+
+jobs:
+# Try to trigger the job multiple times and see what happens
+- name: simple-job1
+  plan:
+  - task: simple-task
+    config:
+      platform: linux
+      image_resource:
+        source:
+          repository: starkandwayne/concourse
+          tag: latest
+        type: registry-image
+      run:
+        path: echo
+        args: ["Hello, world!"]
+        
+- name: genesis-vault-init1
+  plan:
+  - do:
+    - in_parallel:
+      - get: dev-cloud-config
+        trigger: true
+      - get: dev-runtime-config
+        trigger: true
+      - get: dev-changes
+        trigger: true
+  - task: simple-task
+    config:
+      image_resource:
+        source:
+          repository: starkandwayne/concourse
+          tag: latest
+        type: registry-image
+      inputs:
+      - name: dev-changes
+      outputs:
+      - name: out
+      params:
+        BOSH_CA_CERT: (( vault "secret/dev/bosh/ssl/ca:certificate" ))
+        BOSH_CLIENT: admin
+        BOSH_CLIENT_SECRET: (( vault "secret/dev/bosh/users/admin:password" ))
+        BOSH_ENVIRONMENT: https://10.4.16.4:25555
+        BOSH_NON_INTERACTIVE: true
+        CACHE_DIR: dev-cache
+        CI_NO_REDACT: 0
+        CURRENT_ENV: dev
+        GENESIS_HONOR_ENV: 1
+        GIT_BRANCH: yang
+        GIT_PRIVATE_KEY: (( vault "concourse/demo/vault/github:private_key" ))
+        OUT_DIR: out/git
+        PREVIOUS_ENV: null
+        VAULT_ADDR: https://10.4.1.7
+        VAULT_ROLE_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
+        VAULT_SECRET_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
+        VAULT_SKIP_VERIFY: true
+        WORKING_DIR: dev-changes
+      platform: linux
+      run:
+        path: bash
+        args:
+        - "-ec"
+        - | 
+         echo "Creating Vault target using safe";
+         safe target ${VAULT_ADDR} deployments-vault --no-strongbox -k
+         echo "Logging into Vault";
+         printf "${VAULT_ROLE_ID}\n${VAULT_SECRET_ID}\n" | 
+         safe auth approle;
+
+         echo "Getting ${CURRENT_ENV} vault info";
+         dev-changes/.genesis/bin/genesis info ${CURRENT_ENV} -C dev-changes
+
+         echo "Init  ${CURRENT_ENV} Vault"
+         dev-changes/.genesis/bin/genesis do ${CURRENT_ENV} -- init -C dev-changes
+         safe targets
+
+         echo "Export ${CURRENT_ENV} target configuration into envvar"
+         eval $(safe env --bash)
+
+         echo "Export ${CURRENT_ENV} vault seal keys"
+         SEAL_KEY_PATH='secret/vault/seal/keys'
+         EXPORTED_SEAL_KEYS=$(safe -T ${CURRENT_ENV} -k export  ${SEAL_KEY_PATH})
+         MASTER_VAULT_SEAL_KEY_STORING_PATH="secret/${CURRENT_ENV}/vault/seal/keys"
+
+         echo "${EXPORTED_SEAL_KEYS/"$SEAL_KEY_PATH"/"$MASTER_VAULT_SEAL_KEY_STORING_PATH"}"   | safe -T deployments-vault -k  import
+         safe -T deployments-vault set secret/${CURRENT_ENV}/vault VAULT_ADDR=${VAULT_ADDR}
+         safe -T deployments-vault set secret/${CURRENT_ENV}/vault VAULT_TOKEN=${VAULT_TOKEN}
+
+- name: genesis-vault-unseal
+  plan:
+  - do:
+    - in_parallel:
+      - get: dev-cloud-config
+        trigger: true
+      - get: dev-runtime-config
+        trigger: true
+      - get: dev-changes
+        trigger: true
+  - task: simple-task
+    config:
+      image_resource:
+        source:
+          repository: starkandwayne/concourse
+          tag: latest
+        type: registry-image
+      inputs:
+      - name: dev-changes
+      outputs:
+      - name: out
+      params:
+        BOSH_CA_CERT: (( vault "secret/dev/bosh/ssl/ca:certificate" ))
+        BOSH_CLIENT: admin
+        BOSH_CLIENT_SECRET: (( vault "secret/dev/bosh/users/admin:password" ))
+        BOSH_ENVIRONMENT: https://10.4.16.4:25555
+        BOSH_NON_INTERACTIVE: true
+        CACHE_DIR: dev-cache
+        CI_NO_REDACT: 0
+        CURRENT_ENV: dev
+        GENESIS_HONOR_ENV: 1
+        GIT_BRANCH: yang
+        GIT_PRIVATE_KEY: (( vault "concourse/demo/vault/github:private_key" ))
+        OUT_DIR: out/git
+        PREVIOUS_ENV: null
+        VAULT_ADDR: https://10.4.1.7
+        VAULT_ROLE_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
+        VAULT_SECRET_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
+        VAULT_SKIP_VERIFY: true
+        WORKING_DIR: dev-changes
+      platform: linux
+      run:
+        path: bash
+        args:
+        - "-ec"
+        - | 
+         echo "Creating Vault target";
+         safe target ${VAULT_ADDR} deployments-vault --no-strongbox -k
+         echo "Logging into Vault";
+         printf "${VAULT_ROLE_ID}\n${VAULT_SECRET_ID}\n" | 
+         safe auth approle;
+
+         echo "Getting dev info using genesis command";
+         dev-changes/.genesis/bin/genesis info dev -C dev-changes
+
+         echo "Getting ${CURRENT_ENV} Vault target configuration"
+         DEV_VAULT_ADDRESS=$( safe -k get secret/${CURRENT_ENV}/vault:VAULT_ADDR )
+         DEV_VAULT_TOKEN=$( safe -k get secret/${CURRENT_ENV}/vault:VAULT_TOKEN )
+
+         echo "Targeting deployed Vault"
+         safe target ${DEV_VAULT_ADDRESS} ${CURRENT_ENV}
+
+         echo "Logging into ${CURRENT_ENV} Vault";
+         echo "${DEV_VAULT_TOKEN}" | safe -T ${CURRENT_ENV} auth token
+         safe -T ${CURRENT_ENV} -k tree
+        #  echo "Genesis unseal vault using target ${CURRENT_ENV}"
+        # the seal keys are in deployments-vault as secret/${CURRENT_ENV}/vault/seal/keys
+        #  dev-changes/.genesis/bin/genesis do dev -C dev-changes -- unseal
+
+- name: genesis-vault-backup
+  plan:
+  - do:
+    - in_parallel:
+      - get: dev-cloud-config
+        trigger: true
+      - get: dev-runtime-config
+        trigger: true
+      - get: dev-changes
+        trigger: true
+  - task: simple-task
+    config:
+      image_resource:
+        source:
+          repository: starkandwayne/concourse
+          tag: latest
+        type: registry-image
+      inputs:
+      - name: dev-changes
+      outputs:
+      - name: out
+      params:
+        BOSH_CA_CERT: (( vault "secret/dev/bosh/ssl/ca:certificate" ))
+        BOSH_CLIENT: admin
+        BOSH_CLIENT_SECRET: (( vault "secret/dev/bosh/users/admin:password" ))
+        BOSH_ENVIRONMENT: https://10.4.16.4:25555
+        BOSH_NON_INTERACTIVE: true
+        CACHE_DIR: dev-cache
+        CI_NO_REDACT: 0
+        CURRENT_ENV: dev
+        GENESIS_HONOR_ENV: 1
+        GIT_BRANCH: yang
+        GIT_PRIVATE_KEY: (( vault "concourse/demo/vault/github:private_key" ))
+        OUT_DIR: out/git
+        PREVIOUS_ENV: null
+        VAULT_ADDR: https://10.4.1.7
+        VAULT_ROLE_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
+        VAULT_SECRET_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
+        VAULT_SKIP_VERIFY: true
+        WORKING_DIR: dev-changes
+        MAIN_VAULT_NAME: deployments-vault
+      platform: linux
+      run:
+        path: bash
+        args:
+        - "-ec"
+        - |
+         echo "========${MAIN_VAULT_NAME}===========================================================" 
+         echo "This script will export data under secret/br from ${MAIN_VAULT_NAME}@${VAULT_ADDR} to ${CURRENT_ENV}"
+         echo ""
+         echo "Creating ${MAIN_VAULT_NAME} Vault target - This is the vault target where secret will be backed up from";
+         safe target ${VAULT_ADDR} ${MAIN_VAULT_NAME} --no-strongbox -k
+         echo "Logging into ${MAIN_VAULT_NAME} Vault";
+         printf "${VAULT_ROLE_ID}\n${VAULT_SECRET_ID}\n" | 
+         safe auth approle;
+
+
+         echo "Getting ${CURRENT_ENV} Vault target configuration"
+         DEV_VAULT_ADDRESS=$( safe -k get secret/${CURRENT_ENV}/vault:VAULT_ADDR )
+         DEV_VAULT_TOKEN=$( safe -k get secret/${CURRENT_ENV}/vault:VAULT_TOKEN )
+
+         echo "==========${CURRENT_ENV}===========================================================" 
+         echo "Creating ${CURRENT_ENV} Vault target - This is the vault target where secret will be backed up to";
+         safe target ${DEV_VAULT_ADDRESS} ${CURRENT_ENV}
+
+         echo "Logging into ${CURRENT_ENV} Vault";
+         echo "${DEV_VAULT_TOKEN}" | safe -T ${CURRENT_ENV} -k auth token
+         
+         echo "Export secret/br from ${MAIN_VAULT_NAME} Vault to ${CURRENT_ENV} Vault";
+         echo "Please note that secret need exist on both vault to make it work."
+         echo "For example if export target Vault doesn't have a `concourse` path, this command will not work."
+         safe -T  ${MAIN_VAULT_NAME} export secret/br | safe -T ${CURRENT_ENV} -k import
+groups:
+- name: opsjob
+  jobs:
+    - simple-job1
+    - genesis-vault-init1
+    - genesis-vault-unseal
+    - genesis-vault-backup
+
+
+jobs:
+- name: trigger-job-in-dr
+  public: true
+  serial: true
+  plan:
+  - do:
+    - in_parallel:
+      - get: dev-changes
+        passed:
+        - dev-vault
+        trigger: true
+  - task: simple-job
+    config:
+      image_resource:
+        source:
+          repository: starkandwayne/concourse
+          tag: latest
+        type: registry-image
+      inputs:
+      - name: dev-changes
+      outputs:
+      - name: out
+      params:
+        VAULT_ADDR: https://10.4.1.7
+        VAULT_ROLE_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-id" ))
+        VAULT_SECRET_ID: (( vault "secret/uswest2demo/full/concourse/approle/concourse:approle-secret" ))
+        VAULT_SKIP_VERIFY: true
+        WORKING_DIR: dev-changes
+      platform: linux
+      run:
+        path: bash
+        args:
+        - "-ec"
+        - | 
+         echo "Creating Vault target using safe";
+         safe target ${VAULT_ADDR} deployments-vault --no-strongbox -k
+         echo "Logging into Vault";
+         printf "${VAULT_ROLE_ID}\n${VAULT_SECRET_ID}\n" | 
+         safe auth approle;
+         CONCOURSEDR_URL=$(safe get secret/dr/dev/concourse:url)
+         CONCOURSEDR_UN=$(safe get secret/dr/dev/concourse:username)
+         CONCOURSEDR_PW=$(safe get secret/dr/dev/concourse:password)
+
+         curl https://github.com/concourse/concourse/releases/download/v7.7.1/fly-7.7.1-linux-amd64.tgz -L --output fly-7.7.1-linux-amd64.tgz 
+         tar zxvf fly-7.7.1-linux-amd64.tgz 
+         echo 'login...............'
+         ./fly --target codexdr login -k --team-name main --concourse-url ${CONCOURSEDR_URL} -u ${CONCOURSEDR_UN} -p ${CONCOURSEDR_PW}
+         ./fly targets
+         echo 'trigger-job'
+         echo 'trigger-job'
+         ./fly --target codexdr trigger-job -j='test_pipeline/job-hello-world'
+
+groups:
+- name: vault-deployment-pipeline
+  jobs:
+  - ((append))
+  - trigger-job-in-dr
